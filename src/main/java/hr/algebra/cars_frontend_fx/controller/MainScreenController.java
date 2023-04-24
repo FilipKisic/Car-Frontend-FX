@@ -3,6 +3,7 @@ package hr.algebra.cars_frontend_fx.controller;
 import hr.algebra.cars_frontend_fx.api.CarAPI;
 import hr.algebra.cars_frontend_fx.converter.JsonToCarDTOListConverter;
 import hr.algebra.cars_frontend_fx.model.CarDTO;
+import hr.algebra.cars_frontend_fx.model.CarModel;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.fxml.FXML;
@@ -52,6 +53,36 @@ public class MainScreenController {
 
     @FXML
     public void initialize() {
+        refreshDataInTable();
+    }
+
+    @FXML
+    public void onBtnClearPressed() {
+        tvCars.getSelectionModel().clearSelection();
+        clearAllFields();
+    }
+
+    @FXML
+    public void onBtnCreatePressed() {
+        try {
+            carApi.createCar(getCarModelFromUser());
+            tvCars.refresh();
+            clearAllFields();
+            refreshDataInTable();
+        } catch (IOException e) {
+            new Alert(Alert.AlertType.ERROR, e.getMessage(), ButtonType.OK).showAndWait();
+        }
+    }
+
+    @FXML
+    public void onBtnUpdatePressed() {
+    }
+
+    @FXML
+    public void onBtnDeletePressed() {
+    }
+
+    private void refreshDataInTable() {
         try {
             final ObservableList<CarDTO> observableListOfCars = FXCollections.observableList(carApi.getAllCars());
             populateTableWithInitialData(observableListOfCars);
@@ -91,25 +122,20 @@ public class MainScreenController {
         tfPower.setText(carDTO.getPowerInHp().toString());
     }
 
-    @FXML
-    public void onBtnClearPressed() {
-        tvCars.getSelectionModel().clearSelection();
+    private CarModel getCarModelFromUser() {
+        return CarModel.builder()
+                .brand(tfBrand.getText())
+                .model(tfModel.getText())
+                .color(tfColor.getText())
+                .powerInHp(Integer.parseInt(tfPower.getText()))
+                .build();
+    }
+
+    private void clearAllFields() {
         tfId.clear();
         tfBrand.clear();
         tfModel.clear();
         tfColor.clear();
         tfPower.clear();
-    }
-
-    @FXML
-    public void onBtnCreatePressed() {
-    }
-
-    @FXML
-    public void onBtnUpdatePressed() {
-    }
-
-    @FXML
-    public void onBtnDeletePressed() {
     }
 }
