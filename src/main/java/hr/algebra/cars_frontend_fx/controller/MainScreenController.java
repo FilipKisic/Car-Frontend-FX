@@ -1,12 +1,19 @@
 package hr.algebra.cars_frontend_fx.controller;
 
+import hr.algebra.cars_frontend_fx.api.CarAPI;
+import hr.algebra.cars_frontend_fx.converter.JsonToCarDTOListConverter;
+import hr.algebra.cars_frontend_fx.model.CarDTO;
+import javafx.collections.FXCollections;
+import javafx.collections.ObservableList;
 import javafx.fxml.FXML;
-import javafx.scene.control.Button;
-import javafx.scene.control.TableColumn;
-import javafx.scene.control.TableView;
-import javafx.scene.control.TextField;
+import javafx.scene.control.*;
+import javafx.scene.control.cell.PropertyValueFactory;
+import javafx.scene.input.MouseButton;
+
+import java.io.IOException;
 
 public class MainScreenController {
+    private final CarAPI carApi;
     @FXML
     public TableView tvCars;
     @FXML
@@ -38,8 +45,60 @@ public class MainScreenController {
     @FXML
     public Button btnDelete;
 
+    public MainScreenController() {
+        final JsonToCarDTOListConverter converter = new JsonToCarDTOListConverter();
+        this.carApi = new CarAPI(converter);
+    }
+
+    @FXML
+    public void initialize() {
+        try {
+            final ObservableList<CarDTO> observableListOfCars = FXCollections.observableList(carApi.getAllCars());
+            populateTableWithInitialData(observableListOfCars);
+            setOnClickListenerOnRow();
+        } catch (IOException e) {
+            new Alert(Alert.AlertType.ERROR, e.getMessage(), ButtonType.OK).showAndWait();
+        }
+    }
+
+    private void populateTableWithInitialData(final ObservableList<CarDTO> observableListOfCars) {
+        tcId.setCellValueFactory(new PropertyValueFactory<>("id"));
+        tcBrand.setCellValueFactory(new PropertyValueFactory<>("brand"));
+        tcModel.setCellValueFactory(new PropertyValueFactory<>("model"));
+        tcColor.setCellValueFactory(new PropertyValueFactory<>("color"));
+        tcPower.setCellValueFactory(new PropertyValueFactory<>("powerInHp"));
+
+        tvCars.setItems(observableListOfCars);
+    }
+
+    private void setOnClickListenerOnRow() {
+        tvCars.setRowFactory(tableView -> {
+            final TableRow<CarDTO> row = new TableRow<>();
+            row.setOnMouseClicked(event -> {
+                if (!row.isEmpty() && event.getButton() == MouseButton.PRIMARY) {
+                    fillTextFieldsWithData(row.getItem());
+                }
+            });
+            return row;
+        });
+    }
+
+    private void fillTextFieldsWithData(final CarDTO carDTO) {
+        tfId.setText(carDTO.getId().toString());
+        tfBrand.setText(carDTO.getBrand());
+        tfModel.setText(carDTO.getModel());
+        tfColor.setText(carDTO.getColor());
+        tfPower.setText(carDTO.getPowerInHp().toString());
+    }
+
     @FXML
     public void onBtnClearPressed() {
+        tvCars.getSelectionModel().clearSelection();
+        tfId.clear();
+        tfBrand.clear();
+        tfModel.clear();
+        tfColor.clear();
+        tfPower.clear();
     }
 
     @FXML
