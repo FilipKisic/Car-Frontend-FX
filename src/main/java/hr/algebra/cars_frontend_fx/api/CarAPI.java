@@ -2,7 +2,6 @@ package hr.algebra.cars_frontend_fx.api;
 
 import hr.algebra.cars_frontend_fx.converter.JsonToCarDTOListConverter;
 import hr.algebra.cars_frontend_fx.model.CarDTO;
-import hr.algebra.cars_frontend_fx.model.CarModel;
 import hr.algebra.cars_frontend_fx.model.HttpMethod;
 import lombok.AllArgsConstructor;
 
@@ -34,24 +33,23 @@ public class CarAPI {
         }
     }
 
-    public void createCar(CarModel carToCreate) throws IOException {
+    public void createCar(final CarDTO carToCreate) throws IOException {
         final HttpURLConnection postRequest = prepareConnection("http://localhost:8080/cars", HttpMethod.POST);
-        final String jsonBody = carToCreate.toJson();
+        sendDataToRestApi(carToCreate, postRequest);
+    }
 
-        try (OutputStream os = postRequest.getOutputStream()) {
-            byte[] input = jsonBody.getBytes(StandardCharsets.UTF_8);
-            os.write(input, 0, input.length);
-        }
+    public void updateCar(final CarDTO carToUpdate) throws IOException {
+        final HttpURLConnection putRequest = prepareConnection("http://localhost:8080/cars", HttpMethod.PUT);
+        sendDataToRestApi(carToUpdate, putRequest);
+    }
 
-        try (BufferedReader bufferedReader = new BufferedReader(new InputStreamReader(postRequest.getInputStream(), StandardCharsets.UTF_8))) {
-            final StringBuilder response = new StringBuilder();
-            String responseLine;
-            while ((responseLine = bufferedReader.readLine()) != null) {
-                response.append(responseLine.trim());
-            }
-            if (postRequest.getResponseCode() != HttpURLConnection.HTTP_OK) {
-                throw new IOException("There is an error with endpoint");
-            }
+    public void deleteCar(final CarDTO carToDelete) throws IOException {
+        final HttpURLConnection deleteRequest = prepareConnection(
+                "http://localhost:8080/cars/" + carToDelete.getId(),
+                HttpMethod.DELETE
+        );
+        if (deleteRequest.getResponseCode() != HttpURLConnection.HTTP_OK) {
+            throw new IOException("DELETE request failed...");
         }
     }
 
@@ -61,7 +59,7 @@ public class CarAPI {
         connection.setRequestMethod(httpMethod.toString());
         connection.setRequestProperty("User-Agent", "Mozilla/5.0");
 
-        if (httpMethod == HttpMethod.POST) {
+        if (httpMethod == HttpMethod.POST || httpMethod == HttpMethod.PUT) {
             connection.setRequestProperty("Content-Type", "application/json");
             connection.setDoOutput(true);
         }
@@ -80,7 +78,17 @@ public class CarAPI {
         reader.close();
         return response.toString();
     }
-}
 
-//Converter: https://www.javatpoint.com/convert-json-to-map-in-java
-//HTTP Methods: https://www.javaguides.net/2019/07/java-http-getpost-request-example.html
+    private void sendDataToRestApi(final CarDTO carModel, final HttpURLConnection httpRequest) throws IOException {
+        final String jsonBody = carModel.toJson();
+
+        try (OutputStream os = httpRequest.getOutputStream()) {
+            byte[] input = jsonBody.getBytes(StandardCharsets.UTF_8);
+            os.write(input, 0, input.length);
+        }
+
+        if (httpRequest.getResponseCode() != HttpURLConnection.HTTP_OK) {
+            throw new IOException("There is an error with sending data to the endpoint...");
+        }
+    }
+}

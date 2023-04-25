@@ -15,4 +15,14 @@ public class CarDTO {
     private String model;
     private String color;
     private Integer powerInHp;
+
+    public String toJson() {
+        return "{"
+                + "\"id\":\"" + id + "\","
+                + "\"brand\":\"" + brand + "\","
+                + "\"model\":\"" + model + "\","
+                + "\"color\":\"" + color + "\","
+                + "\"powerInHp\":\"" + powerInHp
+                + "\"}";
+    }
 }

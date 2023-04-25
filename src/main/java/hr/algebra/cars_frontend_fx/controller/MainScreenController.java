@@ -3,7 +3,6 @@ package hr.algebra.cars_frontend_fx.controller;
 import hr.algebra.cars_frontend_fx.api.CarAPI;
 import hr.algebra.cars_frontend_fx.converter.JsonToCarDTOListConverter;
 import hr.algebra.cars_frontend_fx.model.CarDTO;
-import hr.algebra.cars_frontend_fx.model.CarModel;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.fxml.FXML;
@@ -76,23 +75,39 @@ public class MainScreenController {
 
     @FXML
     public void onBtnUpdatePressed() {
+        try {
+            carApi.updateCar(getCarModelFromUser());
+            tvCars.refresh();
+            clearAllFields();
+            refreshDataInTable();
+        } catch (IOException e) {
+            new Alert(Alert.AlertType.ERROR, e.getMessage(), ButtonType.OK).showAndWait();
+        }
     }
 
     @FXML
     public void onBtnDeletePressed() {
+        try {
+            carApi.deleteCar(getCarModelFromUser());
+            tvCars.refresh();
+            clearAllFields();
+            refreshDataInTable();
+        } catch (IOException e) {
+            new Alert(Alert.AlertType.ERROR, e.getMessage(), ButtonType.OK).showAndWait();
+        }
     }
 
     private void refreshDataInTable() {
         try {
             final ObservableList<CarDTO> observableListOfCars = FXCollections.observableList(carApi.getAllCars());
-            populateTableWithInitialData(observableListOfCars);
+            populateTableWithData(observableListOfCars);
             setOnClickListenerOnRow();
         } catch (IOException e) {
             new Alert(Alert.AlertType.ERROR, e.getMessage(), ButtonType.OK).showAndWait();
         }
     }
 
-    private void populateTableWithInitialData(final ObservableList<CarDTO> observableListOfCars) {
+    private void populateTableWithData(final ObservableList<CarDTO> observableListOfCars) {
         tcId.setCellValueFactory(new PropertyValueFactory<>("id"));
         tcBrand.setCellValueFactory(new PropertyValueFactory<>("brand"));
         tcModel.setCellValueFactory(new PropertyValueFactory<>("model"));
@@ -122,8 +137,9 @@ public class MainScreenController {
         tfPower.setText(carDTO.getPowerInHp().toString());
     }
 
-    private CarModel getCarModelFromUser() {
-        return CarModel.builder()
+    private CarDTO getCarModelFromUser() {
+        return CarDTO.builder()
+                .id(tfId.getText().isEmpty() ? null : Long.parseLong(tfId.getText()))
                 .brand(tfBrand.getText())
                 .model(tfModel.getText())
                 .color(tfColor.getText())
